@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Internship Dashboard - Interactive</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .chart {
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Internship Offer Dashboard</h1>
+
+  <input type="file" id="fileInput" accept=".json" />
+  <p><strong>Upload a JSON file containing offer data.</strong></p>
+
+  <div class="chart" id="domainPie"></div>
+  <div class="chart" id="domainBar"></div>
+  <div class="chart" id="yearBar"></div>
+  <div class="chart" id="collegeBar"></div>
+  <div class="chart" id="timelineLine"></div>
+
+  <script>
+    document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const json = JSON.parse(e.target.result);
+        generateCharts(json);
+      };
+
+      reader.readAsText(file);
+    }
+
+    function generateCharts(data) {
+      const domainCount = {};
+      const yearCount = {};
+      const collegeCount = {};
+      const dateCount = {};
+
+      data.forEach(entry => {
+        domainCount[entry.Domain] = (domainCount[entry.Domain] || 0) + 1;
+        yearCount[entry["Academic Year"]] = (yearCount[entry["Academic Year"]] || 0) + 1;
+        collegeCount[entry.College] = (collegeCount[entry.College] || 0) + 1;
+        const date = new Date(entry.Date).toISOString().split("T")[0];
+        dateCount[date] = (dateCount[date] || 0) + 1;
+      });
+
+      Plotly.newPlot('domainPie', [{
+        type: "pie",
+        labels: Object.keys(domainCount),
+        values: Object.values(domainCount),
+        hole: 0.4
+      }], {
+        title: "Offers by Domain"
+      });
+
+      Plotly.newPlot('domainBar', [{
+        type: "bar",
+        x: Object.keys(domainCount),
+        y: Object.values(domainCount),
+        marker: { color: "skyblue" }
+      }], {
+        title: "Number of Offers by Domain",
+        xaxis: { title: "Domain" },
+        yaxis: { title: "Count" }
+      });
+
+      Plotly.newPlot('yearBar', [{
+        type: "bar",
+        x: Object.keys(yearCount),
+        y: Object.values(yearCount),
+        marker: { color: "seagreen" }
+      }], {
+        title: "Number of Offers by Academic Year",
+        xaxis: { title: "Academic Year" },
+        yaxis: { title: "Count" }
+      });
+
+      Plotly.newPlot('collegeBar', [{
+        type: "bar",
+        x: Object.keys(collegeCount),
+        y: Object.values(collegeCount),
+        marker: { color: "coral" }
+      }], {
+        title: "Number of Offers by College",
+        xaxis: { title: "College" },
+        yaxis: { title: "Count" }
+      });
+
+      const sortedDates = Object.keys(dateCount).sort();
+      const dateVals = sortedDates.map(date => dateCount[date]);
+
+      Plotly.newPlot('timelineLine', [{
+        type: "scatter",
+        mode: "lines+markers",
+        x: sortedDates,
+        y: dateVals,
+        line: { color: "purple" }
+      }], {
+        title: "Offers Over Time",
+        xaxis: { title: "Date" },
+        yaxis: { title: "Count" }
+      });
+    }
+  </script>
+
+</body>
+</html>
